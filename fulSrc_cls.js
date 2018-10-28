@@ -66,7 +66,7 @@ class fScreen {
 
         this.panel_els = this.target.children;
 
-        this.wapperH = this.target.offsetHeight;
+        this.wapperH = this.target.clientHeight;
         for (let el of this.panel_els) {
             el.style.height = this.wapperH + "px";
         }

@@ -1,7 +1,7 @@
 // ---------
 // util
 
-var $ = function(q){
+var $ = function(q) {
     ret = document.querySelectorAll.call(document, q);
     return ret.length == 1 ? ret[0] : ret
 }
@@ -41,15 +41,16 @@ fScreen.prototype.option = function(conf) {
     this.timeout = conf.timeout || 0.6;
     this.target.style.transition = "all " + this.timeout + "s";
     this.loop = conf.loop || false;
+    this.touch_threshold = conf.touch_threshold || 0.2;
 
     this.nav = conf.nav || undefined;
     if (!this.nav) return;
     if (typeof this.nav == "string") this.nav = $(this.nav);
     this.nav_els = this.nav.children;
 }
-fScreen.prototype.reSize = function(){
+fScreen.prototype.reSize = function() {
     console.dir(this.target)
-    this.wapperH = this.target.offsetHeight;
+    this.wapperH = this.target.clientHeight;
     for (var i = 0; i < this.panel_els.length; i++) {
         this.panel_els[i].style.height = this.wapperH + "px";
     }
@@ -70,7 +71,7 @@ fScreen.prototype.init = function(conf) {
 
     this.panel_els = this.target.children;
 
-    this.wapperH = this.target.offsetHeight;
+    this.wapperH = this.target.clientHeight;
     for (var i = 0; i < this.panel_els.length; i++) {
         this.panel_els[i].style.height = this.wapperH + "px";
     }
@@ -110,7 +111,7 @@ fScreen.prototype.hook = function() {
     if (window.addEventListener) {
         window.addEventListener('DOMMouseScroll', wheel_cb, false);
         window.addEventListener('mousewheel', wheel_cb, false);
-    }else{
+    } else {
         window.onmousewheel = wheel_cb;
     }
     // --------
@@ -127,8 +128,10 @@ fScreen.prototype.hook = function() {
     var touch_E_cb = function(event) {
         var touch_delta = event.changedTouches[0].pageY - startY;
         self.target.style.transition = "all " + self.timeout + "s";
-        if (touch_delta) {
+        if (Math.abs(touch_delta) > self.target.clientHeight * self.touch_threshold) {
             self.handle(touch_delta);
+        }else{
+            self.active(self.cur_index)
         }
         event.preventDefault();
     }
@@ -144,7 +147,7 @@ fScreen.prototype.hook = function() {
         window.addEventListener('touchstart', touch_S_cb, false);
         window.addEventListener('touchend', touch_E_cb, false);
         window.addEventListener('touchmove', touch_M_cb, false);
-    }else{
+    } else {
         window.ontouchstart = touch_S_cb;
         window.ontouchend = touch_E_cb;
         window.ontouchmove = touch_M_cb;
@@ -152,9 +155,13 @@ fScreen.prototype.hook = function() {
     // ------
     // resize
     if (window.addEventListener) {
-        window.addEventListener('resize', function(){self.reSize()}, false);
-    }else{
-        window.onresize = function(){self.reSize()};
+        window.addEventListener('resize', function() {
+            self.reSize()
+        }, false);
+    } else {
+        window.onresize = function() {
+            self.reSize()
+        };
     }
 }
 fScreen.prototype.handle = function(delta) {
@@ -181,7 +188,7 @@ fScreen.prototype.active = function(index_num) {
     this.cur_index = index_num;
     debug_mode && console.log("this.cur_index=>", this.cur_index);
 
-    if(this.nav){
+    if (this.nav) {
         for (var i = 0; i < this.nav_els.length; i++) {
             el = this.nav_els[i];
             if (i == index_num) {
