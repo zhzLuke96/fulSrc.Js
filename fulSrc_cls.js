@@ -104,8 +104,10 @@ class fScreen {
         };
         if (window.addEventListener) {
             window.addEventListener('DOMMouseScroll', wheel_cb, false);
+            window.addEventListener('mousewheel', wheel_cb, false);
+        }else{
+            window.onmousewheel = wheel_cb;
         }
-        window.onmousewheel = wheel_cb;
         // --------
         // touch
         // var touch_delta = 0;
@@ -137,10 +139,11 @@ class fScreen {
             window.addEventListener('touchstart', touch_S_cb, false);
             window.addEventListener('touchend', touch_E_cb, false);
             window.addEventListener('touchmove', touch_M_cb, false);
+        }else{
+            window.ontouchstart = touch_S_cb;
+            window.ontouchend = touch_E_cb;
+            window.ontouchmove = touch_M_cb;
         }
-        window.ontouchstart = touch_S_cb;
-        window.ontouchend = touch_E_cb;
-        window.ontouchmove = touch_M_cb;
     }
     handle(delta) {
         var index = this.cur_index;

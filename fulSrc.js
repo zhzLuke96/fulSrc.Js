@@ -109,8 +109,10 @@ fScreen.prototype.hook = function() {
     };
     if (window.addEventListener) {
         window.addEventListener('DOMMouseScroll', wheel_cb, false);
+        window.addEventListener('mousewheel', wheel_cb, false);
+    }else{
+        window.onmousewheel = wheel_cb;
     }
-    window.onmousewheel = wheel_cb;
     // --------
     // touch
     // var touch_delta = 0;
@@ -142,16 +144,18 @@ fScreen.prototype.hook = function() {
         window.addEventListener('touchstart', touch_S_cb, false);
         window.addEventListener('touchend', touch_E_cb, false);
         window.addEventListener('touchmove', touch_M_cb, false);
+    }else{
+        window.ontouchstart = touch_S_cb;
+        window.ontouchend = touch_E_cb;
+        window.ontouchmove = touch_M_cb;
     }
-    window.ontouchstart = touch_S_cb;
-    window.ontouchend = touch_E_cb;
-    window.ontouchmove = touch_M_cb;
     // ------
     // resize
     if (window.addEventListener) {
         window.addEventListener('resize', function(){self.reSize()}, false);
+    }else{
+        window.onresize = function(){self.reSize()};
     }
-    window.onresize = function(){self.reSize()};
 }
 fScreen.prototype.handle = function(delta) {
     var index = this.cur_index;
@@ -174,7 +178,6 @@ fScreen.prototype.handle = function(delta) {
 }
 fScreen.prototype.active = function(index_num) {
     // if(this.cur_index == index_num)return;
-
     this.cur_index = index_num;
     debug_mode && console.log("this.cur_index=>", this.cur_index);
 
