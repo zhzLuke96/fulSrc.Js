@@ -102,8 +102,11 @@ fScreen.prototype.hook = function() {
         if (delta) {
             self.handle(delta);
         }
-        if (event.preventDefault)
-            event.preventDefault();
+        if (event.cancelable) {
+            if (!event.defaultPrevented) {
+                event.preventDefault();
+            }
+        }
         event.returnValue = false;
     };
     if (window.addEventListener) {
@@ -122,6 +125,13 @@ fScreen.prototype.hook = function() {
         startY = event.changedTouches[0].pageY;
         mStartY = startY;
         self.target.style.transition = "none";
+        // 判断默认行为是否可以被禁用
+        if (event.cancelable) {
+            // 判断默认行为是否已经被禁用
+            if (!event.defaultPrevented) {
+                event.preventDefault();
+            }
+        }
     };
     var touch_E_cb = function(event) {
         var touch_delta = event.changedTouches[0].pageY - startY;
@@ -131,7 +141,6 @@ fScreen.prototype.hook = function() {
         }else{
             self.active(self.cur_index)
         }
-        event.preventDefault();
     }
     var touch_M_cb = function(event) {
         var move_delta = event.changedTouches[0].pageY - mStartY;
@@ -139,13 +148,14 @@ fScreen.prototype.hook = function() {
         self.target.style.top = Number(self.target.style.top.slice(0, -2)) + move_delta + "px";
 
         mStartY = event.changedTouches[0].pageY;
-        event.preventDefault();
+        // event.preventDefault();
     }
     if (window.addEventListener) {
         window.addEventListener('touchstart', touch_S_cb, false);
         window.addEventListener('touchend', touch_E_cb, false);
         window.addEventListener('touchmove', touch_M_cb, false);
-    } else {
+    }
+    else {
         window.ontouchstart = touch_S_cb;
         window.ontouchend = touch_E_cb;
         window.ontouchmove = touch_M_cb;
