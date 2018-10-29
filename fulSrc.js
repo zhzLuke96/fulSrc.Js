@@ -49,11 +49,12 @@ fScreen.prototype.option = function(conf) {
     this.nav_els = this.nav.children;
 }
 fScreen.prototype.reSize = function() {
-    console.dir(this.target)
+    // console.dir(this.target)
     this.wapperH = this.target.clientHeight;
     for (var i = 0; i < this.panel_els.length; i++) {
         this.panel_els[i].style.height = this.wapperH + "px";
     }
+    this.active(this.cur_index);
 }
 fScreen.prototype.init = function(conf) {
     this.name = conf.name || "NONAME";
@@ -71,10 +72,7 @@ fScreen.prototype.init = function(conf) {
 
     this.panel_els = this.target.children;
 
-    this.wapperH = this.target.clientHeight;
-    for (var i = 0; i < this.panel_els.length; i++) {
-        this.panel_els[i].style.height = this.wapperH + "px";
-    }
+    this.reSize();
 }
 
 fScreen.prototype.timeout_lock = function() {
