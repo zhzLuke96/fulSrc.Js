@@ -7,8 +7,10 @@ var $ = function(q) {
 }
 var debug_mode = true;
 
+var f_abs = function(n){return (n^(n>>31))-(n>>31)};
+var f_floor = function(n){return ~~n};
+
 function hasClass(ele, cls) {
-    cls = cls || '';
     if (cls.replace(/\s/g, '').length == 0) return false;
     return new RegExp(' ' + cls + ' ').test(' ' + ele.className + ' ');
 }
@@ -54,6 +56,7 @@ fScreen.prototype.reSize = function() {
     for (var i = 0; i < this.panel_els.length; i++) {
         this.panel_els[i].style.height = this.wapperH + "px";
     }
+
     this.active(this.cur_index);
 }
 fScreen.prototype.init = function(conf) {
@@ -109,11 +112,11 @@ fScreen.prototype.hook = function() {
         }
         event.returnValue = false;
     };
-    if (window.addEventListener) {
-        window.addEventListener('DOMMouseScroll', wheel_cb, false);
-        window.addEventListener('mousewheel', wheel_cb, false);
+    if (self.target.addEventListener) {
+        self.target.addEventListener('DOMMouseScroll', wheel_cb, false);
+        self.target.addEventListener('mousewheel', wheel_cb, false);
     } else {
-        window.onmousewheel = wheel_cb;
+        self.target.onmousewheel = wheel_cb;
     }
     // --------
     // touch
@@ -122,43 +125,50 @@ fScreen.prototype.hook = function() {
     var startY = 0;
     var mStartY = 0;
     var touch_S_cb = function(event) {
-        startY = event.changedTouches[0].pageY;
+        startY = event.changedTouches[0].clientY;
         mStartY = startY;
         self.target.style.transition = "none";
-        // 判断默认行为是否可以被禁用
         if (event.cancelable) {
-            // 判断默认行为是否已经被禁用
             if (!event.defaultPrevented) {
                 event.preventDefault();
             }
         }
     };
     var touch_E_cb = function(event) {
-        var touch_delta = event.changedTouches[0].pageY - startY;
+        var touch_delta = event.changedTouches[0].clientY - startY;
         self.target.style.transition = "all " + self.timeout + "s";
-        if (Math.abs(touch_delta) > self.target.clientHeight * self.touch_threshold) {
+        if (f_abs(touch_delta) > self.target.clientHeight * self.touch_threshold) {
             self.handle(touch_delta);
         }else{
             self.active(self.cur_index)
         }
+        if (event.cancelable) {
+            if (!event.defaultPrevented) {
+                event.preventDefault();
+            }
+        }
     }
     var touch_M_cb = function(event) {
-        var move_delta = event.changedTouches[0].pageY - mStartY;
-        move_delta = Math.floor(move_delta)
+        var move_delta = event.changedTouches[0].clientY - mStartY;
+        move_delta = f_floor(move_delta);
         self.target.style.top = Number(self.target.style.top.slice(0, -2)) + move_delta + "px";
 
-        mStartY = event.changedTouches[0].pageY;
-        // event.preventDefault();
+        mStartY = event.changedTouches[0].clientY;
+        if (event.cancelable) {
+            if (!event.defaultPrevented) {
+                event.preventDefault();
+            }
+        }
     }
-    if (window.addEventListener) {
-        window.addEventListener('touchstart', touch_S_cb, false);
-        window.addEventListener('touchend', touch_E_cb, false);
-        window.addEventListener('touchmove', touch_M_cb, false);
+    if (self.target.addEventListener) {
+        self.target.addEventListener('touchstart', touch_S_cb, false);
+        self.target.addEventListener('touchend', touch_E_cb, false);
+        self.target.addEventListener('touchmove', touch_M_cb, false);
     }
     else {
-        window.ontouchstart = touch_S_cb;
-        window.ontouchend = touch_E_cb;
-        window.ontouchmove = touch_M_cb;
+        self.target.ontouchstart = touch_S_cb;
+        self.target.ontouchend = touch_E_cb;
+        self.target.ontouchmove = touch_M_cb;
     }
     // ------
     // resize
@@ -192,7 +202,6 @@ fScreen.prototype.handle = function(delta) {
     this.active(index)
 }
 fScreen.prototype.active = function(index_num) {
-    // if(this.cur_index == index_num)return;
     this.cur_index = index_num;
     debug_mode && console.log("this.cur_index=>", this.cur_index);
 
