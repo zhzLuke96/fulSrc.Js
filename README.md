@@ -5,10 +5,11 @@ support wheel && touch
 ```js
 var f1 = new fScreen({
     el: "#flScr",
-    // nav: "#nav",
+    nav: "#nav",
     loop: true,
     // default: 0,
     timeout: .5,
+    touch_threshold: .2,
 })
 ```
 
@@ -17,6 +18,6 @@ This content is released under the MIT License.
 
 # todo
 - [x] base
-- [ ] nav
-- [ ] nav-tpl
+- [ ] move boundary
+- [ ] plugins
 - [ ] animation

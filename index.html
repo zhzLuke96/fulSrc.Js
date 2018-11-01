@@ -13,7 +13,7 @@
             height: 100%;
         }
         .full{
-            transition: all .6s;
+            /* transition: all .5s; */
             height: 100%;
             width: 100%;
         }
@@ -34,6 +34,39 @@
         .box{
             text-align: center;
         }
+    </style>
+    <style media="screen">
+        #nav *{
+            transition: all .5s;
+            text-align: center;
+        }
+        #nav{
+            opacity: .8;
+            position: fixed;
+            top: calc(50% - 8rem);
+            right: 5vw;
+            z-index: 10;
+            font-size: 1rem;
+            list-style-type: none;
+        }
+        #nav>li{
+            cursor: pointer;
+            padding: .25rem;
+            margin-top: 1rem;
+        }
+        #nav>li::before{
+            content: "😂";
+            /* content: "📕"; */
+        }
+        #nav>.active{
+            padding: 0;
+            font-size: 1.5rem;
+        }
+        #nav>.active::before{
+            content: "🤣";
+            /* content: "📖"; */
+        }
+
     </style>
 </head>
 
@@ -63,6 +96,12 @@
             </div>
         </div>
     </div>
+    <ul id="nav">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+    </ul>
     <!-- <script src="https://cdn.bootcss.com/vConsole/3.2.0/vconsole.min.js"></script>
     <script type="text/javascript">
         // 初始化
@@ -80,12 +119,13 @@
     <script type="text/javascript">
         var f1 = new fScreen({
             el: "#flScr",
-            // nav: "#nav",
+            nav: "#nav",
             loop: true,
             // default: 0,
             timeout: .5,
             touch_threshold: .2,
         })
+        console.log(f1);
     </script>
 </body>
 
