@@ -1,4 +1,4 @@
-!function(document,window){
+! function(document, window) {
     // ---------
     // util
 
@@ -8,8 +8,12 @@
     }
     var debug_mode = true;
 
-    var f_abs = function(n){return (n^(n>>31))-(n>>31)};
-    var f_floor = function(n){return ~~n};
+    var f_abs = function(n) {
+        return (n ^ (n >> 31)) - (n >> 31)
+    };
+    var f_floor = function(n) {
+        return ~~n
+    };
 
     function hasClass(ele, cls) {
         if (cls.replace(/\s/g, '').length == 0) return false;
@@ -30,6 +34,23 @@
             }
             ele.className = newClass.replace(/^\s+|\s+$/g, '');
         }
+    }
+
+    var addEvent = function(elm, evType, fn, useCapture) {
+        if (elm.addEventListener) {
+            addEvent = function(elm, evType, fn, useCapture) {
+                elm.addEventListener(evType, fn, useCapture || false)
+            }
+        } else if (elm.attachEvent) {
+            addEvent = function(elm, evType, fn, useCapture) {
+                elm.attachEvent('on' + evType, fn)
+            }
+        } else {
+            addEvent = function(elm, evType, fn, useCapture) {
+                elm['on' + evType] = fn
+            }
+        }
+        addEvent(elm, evType, fn, useCapture)
     }
 
     // ----------
@@ -90,19 +111,17 @@
             return true;
         }
     }
-    fScreen.prototype.nav_bind = function(){
+    fScreen.prototype.nav_bind = function() {
         var self = this;
         if (this.nav) {
             for (var i = 0; i < this.nav_els.length; i++) {
                 var el = this.nav_els[i];
-                var bind_cb = (function(i){
-                    return function(){self.active(i)};
+                var bind_cb = (function(i) {
+                    return function() {
+                        self.active(i)
+                    };
                 })(i)
-                if(el.addEventListener){
-                    el.addEventListener("click",bind_cb);
-                }else{
-                    el.onclick(bind_cb);
-                }
+                addEvent(el, 'click', bind_cb)
             }
         }
     }
@@ -114,7 +133,7 @@
             if (!self.timeout_lock()) return false;
             var delta = 0;
             if (!event) //for ie
-            event = window.event;
+                event = window.event;
             if (event.wheelDelta) { //ie,opera
                 delta = event.wheelDelta / 120;
             } else if (event.detail) {
@@ -130,22 +149,28 @@
             }
             event.returnValue = false;
         };
-        if (self.target.addEventListener) {
-            self.target.addEventListener('DOMMouseScroll', wheel_cb, false);
-            self.target.addEventListener('mousewheel', wheel_cb, false);
-        } else {
-            self.target.onmousewheel = wheel_cb;
-        }
+        addEvent(this.target, 'DOMMouseScroll', wheel_cb, false)
+        addEvent(this.target, 'mousewheel', wheel_cb, false)
         // --------
         // touch
         // var touch_delta = 0;
         // var move_delta = 0;
         var startY = 0;
+        var startX = 0;
         var mStartY = 0;
+        var moved = false;
+        var tapBoundary = 10;
+        var tapTime = 700;
+        var lastTouchStartTime;
+        var target = null;
         var touch_S_cb = function(event) {
-            startY = event.changedTouches[0].clientY;
+            var touch = event.changedTouches[0];
+            startY = touch.pageY;
+            startX = touch.pageX;
+            lastTouchStartTime = event.timeStamp;
             mStartY = startY;
             self.target.style.transition = "none";
+            target = (event.target.nodeType === Node.TEXT_NODE ? event.target.parentNode : event.target);
             if (event.cancelable) {
                 if (!event.defaultPrevented) {
                     event.preventDefault();
@@ -153,11 +178,52 @@
             }
         };
         var touch_E_cb = function(event) {
-            var touch_delta = event.changedTouches[0].clientY - startY;
+            if (touchHasMoved === false && event.timeStamp - lastTouchStartTime < tapTime && target != null) {
+                let tagName = target.tagName.toLowerCase(),
+                    needFocus = false;
+                switch (tagName) {
+                    case 'textarea': // focus
+                        needFocus = true;
+                        break;
+                    case 'input':
+                        switch (target.type) {
+                            case 'button':
+                            case 'checkbox':
+                            case 'file':
+                            case 'image':
+                            case 'radio':
+                            case 'submit':
+                                needFocus = false;
+                                break;
+                            default:
+                                needFocus = !target.disabled && !target.readOnly;
+                        }
+                    default:
+                        break;
+                }
+                if (needFocus) {
+                    target.focus();
+                } else {
+                    event.preventDefault(); // prevent click 300ms later
+                }
+
+                let touch = event.changedTouches[0];
+                let _event = document.createEvent('MouseEvents');
+                _event.initMouseEvent('click', true, true, window, 1, touch.screenX, touch.screenY, touch.clientX, touch.clientY, false, false, false, false, 0, null);
+                _event.forwardedTouchEvent = true;
+                _event.initEvent('click', true, true);
+                target.dispatchEvent(_event);
+            }
+            // reset values
+            lastTouchStartTime = undefined;
+            touchHasMoved = false;
+            target = null;
+
+            var touch_delta = event.changedTouches[0].pageY - startY;
             self.target.style.transition = "all " + self.timeout + "s";
             if (f_abs(touch_delta) > self.target.clientHeight * self.touch_threshold) {
                 self.handle(touch_delta);
-            }else{
+            } else {
                 self.active(self.cur_index)
             }
             if (event.cancelable) {
@@ -165,40 +231,33 @@
                     event.preventDefault();
                 }
             }
+
         }
         var touch_M_cb = function(event) {
-            var move_delta = event.changedTouches[0].clientY - mStartY;
+            var touch = event.changedTouches[0];
+            var move_delta = touch.pageY - mStartY;
             move_delta = f_floor(move_delta);
             self.target.style.top = Number(self.target.style.top.slice(0, -2)) + move_delta + "px";
 
-            mStartY = event.changedTouches[0].clientY;
+            mStartY = touch.clientY;
             if (event.cancelable) {
                 if (!event.defaultPrevented) {
                     event.preventDefault();
                 }
             }
+
+            if (f_abs(touch.pageX - startX) > tapBoundary || f_abs(touch.pageY - startY) > tapBoundary) {
+                touchHasMoved = true;
+            }
         }
-        if (self.target.addEventListener) {
-            self.target.addEventListener('touchstart', touch_S_cb, false);
-            self.target.addEventListener('touchend', touch_E_cb, false);
-            self.target.addEventListener('touchmove', touch_M_cb, false);
-        }
-        else {
-            self.target.ontouchstart = touch_S_cb;
-            self.target.ontouchend = touch_E_cb;
-            self.target.ontouchmove = touch_M_cb;
-        }
+        addEvent(this.target, 'touchstart', touch_S_cb, false);
+        addEvent(this.target, 'touchend', touch_E_cb, false);
+        addEvent(this.target, 'touchmove', touch_M_cb, false);
         // ------
         // resize
-        if (window.addEventListener) {
-            window.addEventListener('resize', function() {
-                self.reSize()
-            }, false);
-        } else {
-            window.onresize = function() {
-                self.reSize()
-            };
-        }
+        addEvent(this.target, 'resize', function() {
+            self.reSize()
+        }, false)
     }
     fScreen.prototype.handle = function(delta) {
         var index = this.cur_index;
@@ -238,4 +297,4 @@
     }
 
     window.fScreen = fScreen;
-}(document,window)
+}(document, window)
