@@ -178,7 +178,7 @@
             }
         };
         var touch_E_cb = function(event) {
-            if (touchHasMoved === false && event.timeStamp - lastTouchStartTime < tapTime && target != null) {
+            if (moved === false && event.timeStamp - lastTouchStartTime < tapTime && target != null) {
                 let tagName = target.tagName.toLowerCase(),
                     needFocus = false;
                 switch (tagName) {
@@ -216,7 +216,7 @@
             }
             // reset values
             lastTouchStartTime = undefined;
-            touchHasMoved = false;
+            moved = false;
             target = null;
 
             var touch_delta = event.changedTouches[0].pageY - startY;
